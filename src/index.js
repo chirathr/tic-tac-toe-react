@@ -76,37 +76,40 @@ class Game extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            nextPlayer: 'X',
             history: [Array(9).fill(null), ],
+            stepNumber: 0,
         }
         this.onChange = this.onChange.bind(this);
     }
 
+    getNextPlayer() {
+        return this.state.stepNumber % 2? 'O': 'X';
+    }
+
     onChange(squareId) {
-        let squares = this.state.history[this.state.history.length - 1].slice();
-        squares[squareId] = this.state.nextPlayer;
-        let history = this.state.history.slice();
+        let stepNumber = this.state.stepNumber;
+        let squares = this.state.history[stepNumber].slice();
+        squares[squareId] = this.getNextPlayer();
+        let history = this.state.history.slice(0, stepNumber + 1);
         history.push(squares);
         this.setState({
-            nextPlayer: this.state.nextPlayer === 'X' ? 'O' : 'X',
             history: history,
+            stepNumber: stepNumber + 1
         });
     }
 
     jumpTo(move) {
-        let history = this.state.history.splice(0, move + 1);
-        let nextPlayer = (move % 2)? 'O': 'X';
-        this.setState({history: history, nextPlayer: nextPlayer});
+        this.setState({stepNumber: move});
     }
 
     render() {
-        const squares =  this.state.history[this.state.history.length - 1];
+        const squares =  this.state.history[this.state.stepNumber];
         const winner = calculateWinner(squares);
 
         const moves = this.state.history.map((step, move) => {
             const desc = move ? 'Go to move #' + move : 'Go to game start';
             return (
-                <li>
+                <li key={move}>
                     <button onClick={() => this.jumpTo(move)}>{desc}</button>
                 </li>
             );
@@ -116,7 +119,7 @@ class Game extends React.Component {
         if (winner) {
             status = 'Winner: ' + winner;
         } else {
-            status = `Next player: ${this.state.nextPlayer}`;
+            status = `Next player: ${this.getNextPlayer()}`;
         }
         return (
             <div className="game">
